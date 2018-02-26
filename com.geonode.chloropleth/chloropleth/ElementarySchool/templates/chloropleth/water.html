@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html>{% extends 'chloropleth/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Chloropleth Maps {% endblock %}</title>
+        <link rel="styleseet" href="{% static '/maps/leaflet.css' %}" />
+    <script src="{% static '/maps/leaflet.js' %}"></script>
+    <style>
+
+        #map {height:350px};
+        .info {
+        padding: 6px 8px;
+        font: 14px/16px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255,255,255,0.8);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        }
+
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+    </style>
+</head>
+<body>
+<h1>Maharashtra</h1>
+{% block map %}
+<div id="map" style="height:750px;width:1024px"></div>
+
+<script>
+    var dist_layer;
+
+    /*GeoJson layer*/
+    var data = {{district|safe}}
+      /*create a new map and assign it to a variable 'map'*/
+    var map = L.map('map').setView([18.97,75.86],7); /* center point and zoom level setView([x_cen, y_cen], 4);*/
+
+// control that shows state info on hover
+	var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+		this._div.innerHTML = '<h4>{{Name|upper}}</h4>' +  (props ?
+			'<b>' + props.district + '</b><br />' + props.water + ' Water Quality Index'
+			: 'Hover over a state');
+	};
+
+	info.addTo(map);
+
+
+	// get color depending on population density value
+	range = {{ range }};
+	colors = {{ color|safe }};
+	function getColor(d) {
+		return d < range * 20 / 100 ? colors[0]:
+               d < range * 40 / 100 ? colors[1]:
+               d < range * 60 / 100 ? colors[2]:
+               d < range * 80 / 100 ? colors[3]:
+                                            colors[4];
+	}
+
+	function style(feature) {
+		return {
+			weight: 1,
+			opacity: 1,
+			color: 'white',
+			dashArray: '4',
+			fillOpacity: 0.7,
+			fillColor: getColor(feature.properties.water)
+		};
+	}
+
+	function highlightFeature(e) {
+		var layer = e.target;
+
+		layer.setStyle({
+			weight: 2,
+			color: 'black',
+			dashArray: '',
+			fillOpacity: 0.7
+		});
+
+		if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+			layer.bringToFront();
+		}
+
+		info.update(layer.feature.properties);
+	}
+
+	var geojson;
+
+	function resetHighlight(e) {
+		geojson.resetStyle(e.target);
+		info.update();
+	}
+
+	function zoomToFeature(e) {
+		map.fitBounds(e.target.getBounds());
+	}
+
+	function onEachFeature(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight,
+			click: zoomToFeature
+		});
+	}
+
+	geojson = L.geoJson(data, {
+		style: style,
+		onEachFeature: onEachFeature
+	}).addTo(map);
+
+	map.attributionControl.addAttribution('Water Quality &copy; <a href="http://census.gov/">UDISE</a>');
+
+
+	var legend = L.control({position: 'bottomright'});
+
+	legend.onAdd = function (map) {
+
+		var div = L.DomUtil.create('div', 'info legend'),
+			grades = [0,100, 200, 500, 1000, 1500, 2000, 5000],
+			labels = [],
+			from, to;
+
+		for (var i = 0; i < grades.length; i++) {
+			from = grades[i];
+			to = grades[i + 1];
+
+			labels.push(
+				'<i style="background:' + getColor(from + 1) + '"></i> ' +
+				from + (to ? '&ndash;' + to : '+'));
+		}
+
+		div.innerHTML = labels.join('<br>');
+		return div;
+	};
+
+	legend.addTo(map);
+</script>
+{% endblock %}</body>
+<style>
+
+</style>
+</html>

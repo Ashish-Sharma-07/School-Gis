@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta cfharset="UTF-8">
+    <title>{% block title %}{% endblock  %}</title>
+
+    <link rel="stylesheet" href="{% static '/maps/leaflet.css' %}" />
+    <script src="{% static '/maps/leaflet.js' %}"></script>
+</head>
+<body>
+{% block form %}
+
+{% endblock %}
+{% block map %}
+
+{% endblock %}
+</body>
+</html>

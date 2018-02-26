@@ -1,0 +1,178 @@
+{% extends 'chloropleth/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Chloropleth Maps {% endblock %}</title>
+        <link rel="styleseet" href="{% static '/maps/leaflet.css' %}" />
+    <script src="{% static '/maps/leaflet.js' %}"></script>
+    <style>
+
+        #map {height:100%;width:100%};
+        .info {
+        padding: 6px 8px;
+        font: 14px/16px Arial, Helvetica, sans-serif;
+        background: white;
+        background: rgba(255,255,255,0.8);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        }
+
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+    .loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+
+</head>
+<body style="height:100%; width:100%;">
+<h1>Maharashtra</h1>
+{% block map %}
+<div class="loader"></div>
+<div id="map" style="height:600px;width:1024px">
+
+</div>
+
+<script>
+    var dist_layer;
+
+    /*GeoJson layer*/
+    var data = {{district|safe}};
+      /*create a new map and assign it to a variable 'map'*/
+    var map = L.map('map').setView([18.97,75.86],7); /* center point and zoom level setView([x_cen, y_cen], 4);*/
+
+// control that shows state info on hover
+	var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+		this._div.innerHTML = '<h4>{{Name|upper}}</h4>' +  (props ?
+			'<b>' + props.district + '</b><br />' + props.feature_val +' {{Name}}'
+			: 'Hover over a state');
+	};
+
+	info.addTo(map);
+
+    range = {{ range }};
+    grade ={{ grade|safe }};
+    color = {{ color|safe }};
+	// get color depending on population density value
+	function getColor(d) {
+
+		for(i=0;i<color.length-1;i++)
+		{
+		    if(d<grade[i])
+		    {
+		        return color[i];
+		    }
+		}
+				return color[i];
+	}
+
+	function style(feature) {
+		return {
+			weight: 2,
+			opacity: 1,
+			color: 'white',
+			dashArray: '3',
+			fillOpacity: 0.7,
+			fillColor: getColor(feature.properties.feature_val)
+		};
+	}
+
+	function highlightFeature(e) {
+		var layer = e.target;
+
+		layer.setStyle({
+			weight: 5,
+			color: '#666',
+			dashArray: '',
+			fillOpacity: 0.7
+		});
+
+		if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+			layer.bringToFront();
+		}
+
+		info.update(layer.feature.properties);
+	}
+
+	var geojson;
+
+	function resetHighlight(e) {
+		geojson.resetStyle(e.target);
+		info.update();
+	}
+
+	function zoomToFeature(e) {
+		map.fitBounds(e.target.getBounds());
+	}
+
+	function onEachFeature(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight,
+			click: zoomToFeature
+		});
+	}
+
+	geojson = L.geoJson(data, {
+		style: style,
+		onEachFeature: onEachFeature
+	}).addTo(map);
+
+	map.attributionControl.addAttribution('Teacher data &copy; <a href="http://census.gov/">UDISE</a>');
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = {{grade|safe}};
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<span style="width:5px;background:' + getColor(grades[i] + 1) + '"></span> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+legend.addTo(map);
+
+
+
+</script>
+{% endblock %}</body>
+<style>
+
+</style>
+</html>

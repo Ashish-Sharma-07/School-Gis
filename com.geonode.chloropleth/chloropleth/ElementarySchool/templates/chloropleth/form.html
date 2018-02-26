@@ -1,0 +1,88 @@
+{% load static %}
+{% load widget_tweaks %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Chloropleth Maps {% endblock %}</title>
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{% static 'maps/bootstrap.min.css' %}">
+    <script src="{% static 'maps/jquery-3.3.1.js' %}"></script>
+    <script src="{% static 'maps/bootstrap.min.js' %}"></script>
+
+    <style>
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+
+</head>
+<body>
+
+    {% block form %}
+<form method="post" id="f1" class="form-group" action="{% url 'district:get_feature' %}">
+    {% csrf_token %}
+        {{ form.get_level|add_class:" form-control " }}
+        {{ form.get_district| add_class:" form-control "}}
+        {{ form.get_feature | add_class:" form-control "}}
+    <input type="submit" value="Go!!">
+</form>
+    <div class="container">
+    <div class="embed-responsive embed-responsive-16by9">
+     <iframe src="#" name="chloropleth_map_container" id="ifrm"
+             class="embed-responsive-item"  width="1050" height="600"
+             style="-webkit-transform:scale(0.9);-mz-transform-scale(0.9);"
+     >
+    </iframe>
+    </div>
+
+</div>
+    <script>
+        $(document).on(
+        'change','#id_get_level',
+        function(e){
+        if($('#id_get_level').val()=='taluka'){
+            $('#id_get_district').prop( "disabled", false );
+        }
+        else
+        {
+            $('#id_get_district').prop("disabled", true);
+        }})
+
+        $(document).on('submit','#f1',
+        function(e){
+            e.preventDefault();
+            if($('#id_get_level').val()=='district'){
+                if($('#id_get_feature').val()=='water'){
+                $('#ifrm').prop("src","{% url 'district:plot_water' %}");
+                }
+                if($('#id_get_feature').val()=='ppteacher'){
+                $('#ifrm').prop("src","{% url 'district:plot_ppteacher' %}");
+                }
+                 if($('#id_get_feature').val()=='ppstudent'){
+                $('#ifrm').prop("src","{% url 'district:plot_ppstudent' %}");
+                }
+            }
+        });
+
+    </script>
+    {% endblock %}
+</body>
