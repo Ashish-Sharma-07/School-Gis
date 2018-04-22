@@ -1,0 +1,156 @@
+#############################################################################
+
+select distname,block_name,count(schcd) as school,sum(ppteacher) as Teacher,
+sum(ppstudent) as student,
+sum(Cast(toiletwater_b as integer )) as toiletwater_b, 
+sum(Cast(toiletwater_g as integer)) as toiletwater_g,
+sum(Cast(toiletb_func as integer)) as toiletb_func,
+sum(Cast(urinals_b as integer )) as urinals_b,
+sum(Cast(toiletg_func as integer )) as toiletg_func,
+sum(Cast(urinals_g as integer)) as urinals_g
+from school_info
+group by block_name,distname
+order by distname,block_name;
+
+#############################################################################
+
+select *
+    from crosstab(
+        'select block_name,water,count(water) as water_count 
+        from school_info 
+        group by water,block_name 
+        order by block_name,water')
+    as water_cat(
+        block_name varchar(150),
+        "1" bigint,
+        "2" bigint,
+        "3" bigint,
+        "4" bigint,
+        "5" bigint,
+    	"9" bigint);
+    	
+#############################################################################
+
+select *
+from crosstab(
+    'select block_name,bndrywall,count(bndrywall) as bndrywall_count
+    from school_info
+    group by block_name,bndrywall
+    order by block_name,bndrywall')
+    as bndrywall_cat
+    (
+        block_name varchar(50),
+        "1" bigint,
+        "2" bigint,
+        "3" bigint,
+        "4" bigint,
+        "5" bigint,
+        "6" bigint,
+        "7" bigint,
+        "8" bigint);
+    
+#############################################################################
+
+select distname,block_name,
+Sum(case when sch_category='1' then 1 else 0 end) as schcat_1,
+Sum(case when sch_category='2' then 1 else 0 end) as schcat_2,
+Sum(case when sch_category='3' then 1 else 0 end) as schcat_3,
+Sum(case when sch_category='4' then 1 else 0 end) as schcat_4,
+Sum(case when sch_category='5' then 1 else 0 end) as schcat_5,
+Sum(case when sch_category='6' then 1 else 0 end) as schcat_6,
+Sum(case when sch_category='7' then 1 else 0 end) as schcat_7,
+Sum(case when sch_category='8' then 1 else 0 end) as schcat_8,
+Sum(case when sch_category='10' then 1 else 0 end) as schcat_10,
+Sum(case when sch_category='11' then 1 else 0 end) as schcat_11
+    from school_info
+    group by distname,block_name
+    order by distname,block_name;
+##############################################################################
+
+create table water_category as
+select distname,block_name,
+Sum(case when water='1' then 1 else 0 end) as water_1,
+Sum(case when water='2' then 1 else 0 end) as water_2,
+Sum(case when water='3' then 1 else 0 end) as water_3,
+Sum(case when water='4' then 1 else 0 end) as water_4,
+Sum(case when water='5' then 1 else 0 end) as water_5
+    from school_info
+    group by distname,block_name
+    order by distname,block_name;
+##############################################################################
+
+select distname,block_name,
+Sum(case when bndrywall='1' then 1 else 0 end) as bndrywall_1,
+Sum(case when bndrywall='2' then 1 else 0 end) as bndrywall_2,
+Sum(case when bndrywall='3' then 1 else 0 end) as bndrywall_3,
+Sum(case when bndrywall='4' then 1 else 0 end) as bndrywall_4,
+Sum(case when bndrywall='5' then 1 else 0 end) as bndrywall_5,
+Sum(case when bndrywall='6' then 1 else 0 end) as bndrywall_6,
+Sum(case when bndrywall='7' then 1 else 0 end) as bndrywall_7,
+Sum(case when bndrywall='8' then 1 else 0 end) as bndrywall_8
+    from school_info
+    group by distname,block_name
+    order by distname,block_name;
+
+##############################################################################
+create table schmgt_categories as
+select distname,block_name,
+Sum(case when schmgt='1' then 1 else 0 end) as schmgt_1,
+Sum(case when schmgt='2' then 1 else 0 end) as schmgt_2,
+Sum(case when schmgt='3' then 1 else 0 end) as schmgt_3,
+Sum(case when schmgt='4' then 1 else 0 end) as schmgt_4,
+Sum(case when schmgt='5' then 1 else 0 end) as schmgt_5,
+Sum(case when schmgt='6' then 1 else 0 end) as schmgt_6,
+Sum(case when schmgt='7' then 1 else 0 end) as schmgt_7,
+Sum(case when schmgt='8' then 1 else 0 end) as schmgt_8,
+Sum(case when schmgt='97' then 1 else 0 end) as schmgt_97,
+Sum(case when schmgt='98' then 1 else 0 end) as schmgt_98
+    from school_info
+    group by distname,block_name
+    order by distname,block_name;
+#############################################################################
+select distname,block_name,count(schcd) as school,sum(ppteacher) as Teacher,
+sum(ppstudent) as student,
+sum(Cast(toiletwater_b as integer )) as toiletwater_b, 
+sum(Cast(toiletwater_g as integer)) as toiletwater_g,
+sum(Cast(toiletb_func as integer)) as toiletb_func,
+sum(Cast(urinals_b as integer )) as urinals_b,
+sum(Cast(toiletg_func as integer )) as toiletg_func,
+sum(Cast(urinals_g as integer)) as urinals_g,
+Sum(case when handwash_yn='1' then 1 else 0 end) as handwash_count,
+Sum(case when sch_category='1' then 1 else 0 end) as schcat_1,
+Sum(case when sch_category='2' then 1 else 0 end) as schcat_2,
+Sum(case when sch_category='3' then 1 else 0 end) as schcat_3,
+Sum(case when sch_category='4' then 1 else 0 end) as schcat_4,
+Sum(case when sch_category='5' then 1 else 0 end) as schcat_5,
+Sum(case when sch_category='6' then 1 else 0 end) as schcat_6,
+Sum(case when sch_category='7' then 1 else 0 end) as schcat_7,
+Sum(case when sch_category='8' then 1 else 0 end) as schcat_8,
+Sum(case when sch_category='10' then 1 else 0 end) as schcat_10,
+Sum(case when sch_category='11' then 1 else 0 end) as schcat_11,
+Sum(case when water='1' then 1 else 0 end) as water_1,
+Sum(case when water='2' then 1 else 0 end) as water_2,
+Sum(case when water='3' then 1 else 0 end) as water_3,
+Sum(case when water='4' then 1 else 0 end) as water_4,
+Sum(case when water='5' then 1 else 0 end) as water_5,
+Sum(case when bndrywall='1' then 1 else 0 end) as bndrywall_1,
+Sum(case when bndrywall='2' then 1 else 0 end) as bndrywall_2,
+Sum(case when bndrywall='3' then 1 else 0 end) as bndrywall_3,
+Sum(case when bndrywall='4' then 1 else 0 end) as bndrywall_4,
+Sum(case when bndrywall='5' then 1 else 0 end) as bndrywall_5,
+Sum(case when bndrywall='6' then 1 else 0 end) as bndrywall_6,
+Sum(case when bndrywall='7' then 1 else 0 end) as bndrywall_7,
+Sum(case when bndrywall='8' then 1 else 0 end) as bndrywall_8,
+Sum(case when schmgt='1' then 1 else 0 end) as schmgt_1,
+Sum(case when schmgt='2' then 1 else 0 end) as schmgt_2,
+Sum(case when schmgt='3' then 1 else 0 end) as schmgt_3,
+Sum(case when schmgt='4' then 1 else 0 end) as schmgt_4,
+Sum(case when schmgt='5' then 1 else 0 end) as schmgt_5,
+Sum(case when schmgt='6' then 1 else 0 end) as schmgt_6,
+Sum(case when schmgt='7' then 1 else 0 end) as schmgt_7,
+Sum(case when schmgt='8' then 1 else 0 end) as schmgt_8,
+Sum(case when schmgt='97' then 1 else 0 end) as schmgt_97,
+Sum(case when schmgt='98' then 1 else 0 end) as schmgt_98
+from school_info
+group by block_name,distname
+order by distname,block_name;
