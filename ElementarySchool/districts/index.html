@@ -1,0 +1,20 @@
+<script>
+$("#sel_feature").change(
+
+function(){
+    //console.log(data[$(this).val()]);
+    var html ='';
+    dt = data[$(this).val()];
+    for(i=0;i<dt.length;i++)
+    {
+        html+='<div class = "col-md-1"><label for="'+dt[i][0]+'">'+ dt[i][1] +'</label>\
+        <input id="'+dt[i][0]+'" name="'+dt[i][0]+'"  type="number" min="0"\
+               max="1" value="0" step="any"\
+               required style="width:80px;"></div>';
+     }
+     console.log(html);
+
+     $("#weights").empty();
+     $("#weights").append(html);
+});
+</script>

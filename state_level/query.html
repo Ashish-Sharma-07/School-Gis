@@ -1,0 +1,592 @@
+{% extends "geonode_base.html" %}
+{% block body_outer %}
+{% load static  %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Query</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+<!--Page Header-->
+<div class="container">
+     <div class="page-header">
+         <h3 align="Left">Query The Map &nbsp;<small><a href="#" class="badge badge-info" data-toggle="modal" data-target="#myModal">Info</a></small></h3>
+     </div>
+
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">How to use?</h4>
+                </div>
+
+                <div class="modal-body">
+                    <ol class="list-unstyled">
+                        <li>Check the <mark>Select District</mark> If you want to Query On a particular District. </li>
+                        <li class="text-info">Default Query will be executed over all the districts</li>
+                        <li>Check the <mark>Select Taluka</mark> If you want to Query on a partcular Taluka of a Particular District </li>
+                        <li>The <mark>Facility</mark> option lists the facilities you can query on</li>
+                        <li> <span class="glyphicon glyphicon-plus"></span> button is used to add additional query </li>
+                        <li class="text-info">Note that the queries will be <em>and</em> </li>
+                        <li> <span class="glyphicon glyphicon-minus"></span> button removes the additional queries added</li>
+                    </ol>
+                </div>
+
+                <div class="modal-footer">
+                    <p class="text-muted">The Queries are Fired on 2014-2015 School Data provided by schoolreportcard </p>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Alert Modal -->
+    <div class="modal fade" id="AlertModal" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Alert</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>No Result Found!!</p>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+</div>
+
+
+<form id="f1" action="#" method="post">
+    <div class="container">
+        <div class="form-inline">&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="form-group">
+                <label for="is_dist">Select District? </label>
+                <div class="checkbox">
+                <input type="checkbox" id="is_dist" name="is_dist" checked="False">
+            </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="form-group">
+                <label for="sel_dist">District: </label>
+                <select id="sel_dist" name="sel_dist" class="form-control" disabled="True">
+                </select>
+            </div>&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="form-group">
+                <label for="is_tlk">Select Taluka? </label>
+                <div class="checkbox">
+                <input type="checkbox" name="is_tlk" id="is_tlk" checked="False">
+            </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="form-group">
+                <label for="sel_tlk">Taluka:</label><select id="sel_tlk" name="sel_tlk" class="form-control" disabled="True"></select>
+            </div>&nbsp;&nbsp;&nbsp;&nbsp;
+        </div>
+        <br>
+        <div class="form-inline">&nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="form-group">
+                <label for="get_ftr">Facility:</label>
+                <select id="get_ftr" name="get_ftr_0" class="form-control">
+                    <optgroup id="water" label="Water" class="form-group">
+                        {% for k,v in wtrAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup id="sanitation" label="Sanitiation">
+                        {% for k,v in sanAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup id="security" label="Security">
+                        {% for k,v in secAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup id="school category" label="School Category">
+                        {% for k,v in schcatAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup id="school management" label="School Management">
+                        {% for k,v in schmgtAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup id="teacher" label="Teacher">
+                        {% for k,v in tchrAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup id="student" label="Student">
+                        {% for k,v in stdAttributes.iteritems %}
+                        <option value="{{k}}">{{v|upper}}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="inequalities" name="inequalities_0" class="form-control">
+                    <option value="<">&lt;</option>
+                    <option value="<=">&lt;=</option>
+                    <option value=">">&gt;</option>
+                    <option value="<=">&gt;=</option>
+            </select>
+            </div>
+            <div class="form-group">
+                <input type="number" name="val_0" class="form-control" required value="0">
+            </div>
+            <div class="form-group">
+                <button id="add"class="btn btn-success" ><i class="glyphicon glyphicon-plus"></i></button>
+            </div>
+            <div class="form-group">
+                <button type="submit" id="go"class="btn btn-primary" >Go!</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!--Map will be displayed here-->
+<br>
+<div class="container">
+    <div class="row">
+        <div id="map" class="col-md-6" style="height:400px">
+
+        </div>
+        <div id="dt_tbl" class="col-md-6" style="overflow-y:auto;height:400px;">
+
+        </div>
+    </div>
+</div>
+<!--Map Ends Here -->
+<script>
+var klass = "district_level";
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+    }
+
+    $.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            // Only send the token to relative URLs i.e. locally.
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+}});
+
+///Adding More Query Boxes
+var count = 1;
+
+$('#add').click(
+function(e){
+e.preventDefault();
+var html = '<div class="form-inline" id="row_'+count.toString()+'">\
+            <br>\
+            &nbsp;&nbsp;&nbsp;&nbsp;\
+            <div class="form-group">\
+                <label for="get_ftr">Facility:</label>\
+                <select id="get_ftr_'+count.toString() +'" name="get_ftr_'+count.toString() +'"  class="form-control">\
+                    <optgroup id="water" label="Water" class="form-group">\
+                        {% for k,v in wtrAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                    <optgroup id="sanitation" label="Sanitiation">\
+                        {% for k,v in sanAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                    <optgroup id="security" label="Security">\
+                        {% for k,v in secAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                    <optgroup id="school category" label="School Category">\
+                        {% for k,v in schcatAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                    <optgroup id="school management" label="School Management">\
+                        {% for k,v in schmgtAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                    <optgroup id="teacher" label="Teacher">\
+                        {% for k,v in tchrAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                    <optgroup id="student" label="Student">\
+                        {% for k,v in stdAttributes.iteritems %}\
+                        <option value="{{k}}">{{v|upper}}</option>\
+                        {% endfor %}\
+                    </optgroup>\
+                </select>\
+            </div>\
+            <div class="form-group">\
+                <select id="inequalities_'+count.toString()+'" name="inequalities_'+count.toString()+'" class="form-control">\
+                    <option value="<">&lt;</option>\
+                    <option value="<=">&lt;=</option>\
+                    <option value=">">&gt;</option>\
+                    <option value="<=">&gt;=</option>\
+            </select>\
+            </div>\
+            <div class="form-group">\
+                <input type="number" id="value_'+count.toString()+'" name="value_'+count.toString()+'" class="form-control" required value="0" >\
+            </div>\
+            <div class="form-group">\
+                <button id="sub_'+count.toString()+'" class="btn btn-danger"><i class="glyphicon glyphicon-minus"></i></button>\
+            </div>\
+        </div>';
+        $("#f1 .container").append(html);
+        count ++;
+}
+);
+
+$(document).on(
+'click',".btn-danger",function(e){
+e.preventDefault();
+var par = $(this).parent().parent().attr("id");
+par = "#"+par;
+$(par).remove();
+}
+)
+
+
+//Initial setup
+$(document).ready(
+function(){
+    $("#is_dist").prop("checked",false);
+    $("#is_tlk").prop("checked",false);
+    $("#is_tlk").prop("disabled",true);
+    $("#sel_dist").prop("disabled",true);
+    $("#sel_tlk").prop("disabled",true);
+    klass ="district_level";
+    count = 1;
+    ele = $("#dt_tbl");
+    ele.empty();
+}
+)
+
+$('#go').on(
+'click',function(e){
+    e.preventDefault();
+    $(this).prop("disabled",true);
+    frm = $("#f1").serializeArray();
+    //creating location_fields
+    var location_fields={};
+    qyery_start = 0;
+    if(klass =='district_level'){
+        location_fields = {};
+        qyery_start = 0;
+        }
+
+    else if(klass =='block_level'){
+        location_fields.district = frm[1].value;
+        qyery_start = 2;
+        }
+
+    else{
+        location_fields.district = frm[1].value;
+        location_fields.taluka = frm[3].value.toLowerCase();
+        qyery_start = 4;
+        }
+
+    //creating query
+    q1 = [];
+    for(i=qyery_start;i<frm.length;i++)
+    {
+        q1.push([frm[i].value,frm[++i].value,frm[++i].value]);
+    }
+
+    // creating datastructure to send
+
+    data = {class:klass,location_fields:location_fields,feature_queries:q1};
+    //console.log(JSON.stringify(data));
+
+    //Ajax
+    $.ajax({
+        url: "{% url 'choropleth:query_feature' %}",
+        method: "POST",
+        data:{data:JSON.stringify(data)},
+        datatype: "json",
+        success: function(data)
+        {
+            add_layer( jQuery.parseJSON(data));
+            display_info( jQuery.parseJSON(data));
+            $("#go").prop("disabled",false);
+        },
+        error : function(e){
+        $(AlertModal).modal();
+        $("#go").prop("disabled",false);},
+
+    })
+//End Ajax
+}
+)
+
+///Selecting District
+
+$("#is_dist").change(
+	function(e){
+
+    // if checked load the districts
+	if($(this).is(':checked')){
+    $("#sel_dist").prop("disabled",false);
+    $("#is_tlk").prop("disabled",false);
+    klass = "block_level";
+
+    $.ajax({
+                url: "{% url 'choropleth:district_name' %}",
+                method: "POST",
+                data:
+                {
+                    district:"True",
+                },
+                datatype: "json",
+                success: function(data)
+                {
+                    dt = JSON.parse(data);
+                    dist_sel = $('#sel_dist');
+                    dist_sel.empty();
+                    for(i = 0;i<dt.length;i++)
+                        {
+                            var html = '<option value='+dt[i].distname+'>'+dt[i].distname.toUpperCase()+'</option>';
+                            dist_sel.append(html);
+                        }
+                }
+            })
+    }
+
+    else{
+        $("#sel_dist").prop("disabled",true);
+        $("#is_tlk").prop("checked",false);
+        $("#is_tlk").prop("disabled",true);
+        $('#sel_dist').empty();
+        $("#sel_tlk").prop("disabled",true);
+        $('#sel_tlk').empty();
+        klass = "district_level";
+    }
+	});
+
+	//Selecting Taluka
+var tlk;
+$("#is_tlk").change(
+    function(e){
+
+    // if checked load the districts
+	if($(this).is(':checked')){
+	    $("#sel_tlk").prop("disabled",false);
+
+        d_name = $("#sel_dist").val();
+        //console.log(d_name);
+        klass = "village_level";
+    $.ajax({
+        url: "{% url 'choropleth:taluka_name' %}",
+        method: "POST",
+        data:
+        {
+            district:"True",
+            taluka:"True",
+            district_name: d_name,
+        },
+        datatype: "json",
+        success: function(data)
+        {
+        dt = JSON.parse(data);
+             taluka_sel = $('#sel_tlk');
+             taluka_sel.empty();
+             for(i in dt)
+             {
+                var html = '<option value='+dt[i].block_name+'>'+dt[i].block_name+'</option>';
+                taluka_sel.append(html);
+             }
+        }
+    })}
+
+    else{
+        $("#sel_tlk").prop("disabled",true);
+        $('#sel_tlk').empty();
+        klass = "block_level";
+    }
+	});
+
+$("#sel_dist").change(
+
+function(){
+$("#is_tlk").prop("checked",false);
+$("#sel_tlk").empty();
+$("#sel_tlk").prop("disabled",true);
+}
+
+)
+
+
+
+</script>
+
+<!--Map Script-->
+<script>
+//// Initial setup
+//   load the base map when the page is rendered
+var dist_layer;
+/*create a new map and assign it to a variable 'map'*/
+var map = L.map('map').setView([18.97,75.86],6.2);
+
+/*Tile Layer*/
+L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+maxZoom: 18,
+minZoom:2,
+attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+//map.attributionControl.addAttribution('School Data &copy; <a href="http://census.gov/">UDISE</a>');
+var geojson;
+var info;
+function add_layer(data)
+{
+info = L.control();
+
+    if(map.hasLayer(geojson))
+    {
+        while(map.hasLayer(geojson))
+        {
+            map.removeLayer(geojson);
+        }
+        //console.log(info.remove());
+        //console.log();
+        $(".info").remove()
+    }
+
+//Interaction
+function highlightFeature(e) {
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+    });
+
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+
+    info.update(layer.feature.properties);
+}
+
+function resetHighlight(e) {
+    geojson.resetStyle(e.target);
+    info.update();
+}
+
+function zoomToFeature(e) {
+    map.fitBounds(e.target.getBounds());
+}
+
+function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+    });
+}
+
+geojson = L.geoJson(data, {
+    onEachFeature: onEachFeature
+}).addTo(map);
+
+//Adding Marker
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info bg-light'); // create a div with a class "info"
+        this.update();
+        return this._div;
+    };
+
+    //method that we will use to update the control based on feature properties passed
+    info.update = function (props) {
+        this._div.innerHTML = '<h4 align="center">Location</h4>';
+
+        if(props){
+            if(props.distname){
+            this._div.innerHTML += '&nbsp;&nbsp;&nbsp;<strong>District:</strong> '+props.distname.toUpperCase()+'<br>';
+            }
+            if(props.taluka){
+            this._div.innerHTML += '&nbsp;&nbsp;&nbsp;<strong>Taluka:</strong> '+props.taluka.toUpperCase()+'<br>';
+            }
+            //this._div.innerHTML += '&nbsp;&nbsp;&nbsp;<strong>Index:</strong> '+props.index+'';
+        }
+        else{
+        this._div.innerHTML +='<span align="center" class="text-center">Hover over a state</span>';
+        }
+    };
+
+    info.addTo(map);
+    $(".info").prop("style","background-color: white;opacity: 08;border-radius: 8px;width: 200px;");
+    $(".disp_name").prop("style","align:center");
+}
+</script>
+<script>
+///Display data in the side
+function display_info(data)
+{
+
+    //get the div element
+    ele = $("#dt_tbl");
+    ele.empty();
+    //get the attribute names
+    attr =  Object.getOwnPropertyNames(data.features[0].properties);
+    //console.log(attr);
+
+    //create a table tag
+
+    html = '<table class="table table-condensed"> <thead> <tr>';
+
+    //Add the headings
+
+    for (i=0;i<attr.length;i++)
+    {
+        html +='<th>'+attr[i].toUpperCase()+'</th>';
+    }
+    html += '</tr></thead><tbody>';
+    //Add rows
+    dt = data.features;
+    for( i = 0;i<dt.length;i++)
+    {
+        html += '<tr>';
+        for(j in dt[i].properties){
+        html +='<td>'+ dt[i].properties[j].toString().toUpperCase()+'</dt>';
+        }
+        html +='</tr>';
+    }
+    html += '</tbody></table>';
+    ele.append(html);
+}
+</script>
+</body>
+</html>
+{% endblock %}

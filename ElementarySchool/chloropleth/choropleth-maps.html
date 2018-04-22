@@ -1,0 +1,473 @@
+{% extends "geonode_base.html" %}
+{% block body_outer %}
+{% load static  %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Choropleth Maps</title>
+    <!--Scripts for map and bootstrap-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<body>
+    <div class="container">
+        <!--Header And Modal-->
+        <div class="row">
+            <div class="col-md-12 page-header">
+                <h3 align="Left">Choropleth Maps &nbsp;<small><a href="#" class="badge badge-info" data-toggle="modal" data-target="#myModal">Info</a></small></h3>
+            </div>
+            <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">How to use?</h4>
+                </div>
+
+                <div class="modal-body">
+                    <ol class="list-unstyled">
+                        <li>Select <mark>Level </mark> To plot choropleth maps at the given level </li>
+                        <li class="text-info">By Default Maps will be plotted at district Level</li>
+                        <li>If <mark>Taluka Level</mark> is selected,you will have to choose the district</li>
+                        <li>The <mark>Customise Weight</mark> option enables you to provide weights for the various subfeatures selected for the facilities</li>
+                        <li>Specifing the weights is optional. Its weights ranges between 0-1</li>
+                    </ol>
+                </div>
+
+                <div class="modal-footer">
+                    <p class="text-muted">The Queries are Fired on 2014-2015 School Data provided by schoolreportcard </p>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            <!--Alert Modal -->
+            <div class="modal fade" id="AlertModal" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Alert</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>Error Occurred In the Query</p>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--No Geom Modal-->
+
+            <div class="modal fade" id="NoGeomModal" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">No Geometry Locations<small> List of Locations with missing Shape files </small></h4>
+                        </div>
+                        <div class="modal-body">
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <form name="f1" id="f1" method="post" action="#">
+                 <div class="form-inline">
+                     <div class="form-group">
+                         <label for="sel_level">Select Level </label>
+                         <select id="sel_level" name="sel_level" class="form-control">
+                             <option value="district">District</option>
+                             <option value="taluka">Taluka</option>
+                         </select>
+                     </div>
+                     &nbsp;&nbsp;&nbsp;&nbsp;
+                     <div class="form-group">
+                         <label for="sel_dist">District: </label>
+                         <select id="sel_dist" name="sel_dist" class="form-control" disabled="True">
+                         </select>
+                     </div>
+                     &nbsp;&nbsp;&nbsp;&nbsp;
+                     <div class="form-group">
+                         <label for="sel_feature">Feature </label>
+                         <select id="sel_feature" name="sel_feature" class="form-control">
+                             <option value="water">Water</option>
+                             <option value="security">Security</option>
+                             <option value="sanitation">Sanitation</option>
+                             <option value="school_category">School Category</option>
+                             <option value="school_management">School Management</option>
+                             <option value="student">Student Count</option>
+                             <option value="teacher">Teacher Count</option>
+                             <option value="school">School Count</option>
+                         </select>
+                     </div>
+                     &nbsp;&nbsp;&nbsp;&nbsp;
+                     <div class="form-group">
+                         <label for="assign_weight">Customise Weights?</label>
+                         <input type="checkbox" id="assign_weight" name="assign_weight">
+                     </div>
+                     &nbsp;&nbsp;&nbsp;&nbsp;
+                     <button type="submit" id="submit" class="btn btn-success"> Plot!! </button>
+                 </div>
+                <br>
+                <div class="row">
+
+                    <div class="col-md-4" style="height:100px;">
+                    <h3 class="lead">Weights</h3>
+                        <div id="weights"></div>
+                    </div>
+                    <div class="col-md-8">
+                        <!--Plot Map Here-->
+                        <div id="map" style="height:500px">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <br>
+        </div>
+    </div>
+<script>
+
+$(document).ready(
+function(){
+$("#assign_weight").prop("checked",false);
+}
+)
+
+    /*Global Variables*/
+    var dist = {{district|safe}};
+    rec_data = {{ft_data|safe}};
+    var weights =0;
+    //console.log({{ft_data|safe}});
+    /* Add options in the select */
+    $("#sel_dist").ready(
+    function(){
+    for(i=0;i<dist.length;i++)
+    {
+        $("#sel_dist").append('<option value='+dist[i].distname+'>'+dist[i].distname.toUpperCase()+'</option>');
+    }
+    })
+
+    /* enable disable district */
+    $("#sel_level").change(
+    function(){
+        if($(this).val()=="taluka")
+        {
+        $("#sel_dist").prop("disabled",false);
+        }
+        else{
+        $("#sel_dist").prop("disabled",true);
+        }
+    })
+
+var klass = "district_level";
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+    }
+
+    $.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            // Only send the token to relative URLs i.e. locally.
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+}});
+
+$(document).on('click',"#submit",function(e){
+e.preventDefault();
+
+frm = $("#f1").serializeArray();
+console.log(frm);
+/*constructing data in required format**/
+district ={};
+klass = frm[0].value;
+var feature_loc = 1;
+if(klass =='district')
+{
+    district = {};
+    feature_loc = 1;
+}
+else
+{
+//Taluka
+district = {distname:frm[1].value};
+feature_loc = 2;
+}
+
+feature_query = [frm[feature_loc].value];
+
+weights = {};
+count_zeros = 0;
+k = 0;
+for(i=feature_loc+2;i<frm.length;i++)
+{
+    weights[k++] = [frm[i].name , frm[i].value];
+    if(frm[i].value==0){count_zeros++;}
+}
+
+if((count_zeros==k)&&(count_zeros!=0 && k!=0 )){
+alert("Atleast One Weight Must Be Set");
+}
+else{
+data = {kclass:klass,feature:feature_query,location:district,weight:weights};
+console.log(data);
+    $.ajax({
+        url: "{% url 'district:get_data' %}",
+        method: "POST",
+        data:{data:JSON.stringify(data)},
+        datatype: "json",
+        success: function(data)
+        {
+            data_chunk = jQuery.parseJSON(data);
+            color = data_chunk['color'];
+            geo = data_chunk['geographic_data'];
+            grade = data_chunk['grade'];
+            no_geo = data_chunk['no_geom'];
+            /*console.log(color);
+            console.log(grade);
+            console.log(no_geo);
+            console.log(geo);*/
+            add_layer(geo,color,grade);
+            no_geo_data(no_geo);
+        },
+        error : function(e){$("#AlertModal").modal();},
+    })
+    }
+})
+
+function no_geo_data(data){
+console.log(data);
+d = $("#NoGeomModal .modal-dialog .modal-content .modal-body");
+d.empty();
+if(data){
+    var html = "<ol>";
+    for(i=0;i<data.length;i++)
+    {
+        if(data[i].district){
+         html += '<li><b>District: </b>'+data[i].district.toUpperCase()+' ';
+        }
+        if(data[i].taluka){
+        html += '<b>Taluka: </b>'+data[i].taluka.toUpperCase()+' ';
+        }
+        html+= ' <em>Index Value: '+data[i].index+'</em></li>';
+    }
+    html += "</ol>";
+    d.append(html);
+$("#NoGeomModal").modal();
+}
+}
+
+
+$("#assign_weight").change(
+function(e){
+    if($(this).is(":checked"))
+    {
+    var html ='';
+    dt = rec_data[$("#sel_feature").val()];
+    //console.log(dt);
+    for(i=0;i<dt.length;i++)
+    {
+        html+='<div class = "col-md-12"><label for="'+dt[i][0]+'" class="col-md-8">'+ dt[i][1] +'</label>\
+        <input id="'+dt[i][0]+'" name="'+dt[i][0]+'"  type="number" min="0"\
+               max="1" value="0" step="any"\
+               required class="col-md-4"></div>';
+    }
+    $("#weights").empty();
+    $("#weights").append(html);
+    weights =1;
+    }
+    else{
+    weights = 0;
+    $("#weights").empty();
+    }
+});
+
+$("#sel_feature").focus(
+function(){
+    $("#weights").empty();
+    $("#assign_weight").prop("checked",false);
+
+}
+)
+
+</script>
+
+<!--Map Script-->
+<script>
+//// Initial setup
+//   load the base map when the page is rendered
+
+var dist_layer;
+/*create a new map and assign it to a variable 'map'*/
+var map = L.map('map').setView([18.97,75.86],6.2);
+
+/*Tile Layer*/
+L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+maxZoom: 18,
+minZoom:2,
+attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+var geojson;
+var info;
+var legend;
+function add_layer(data,color,grade)
+{
+info = L.control();
+
+    if(map.hasLayer(geojson))
+    {
+        while(map.hasLayer(geojson))
+        {
+            map.removeLayer(geojson);
+        }
+        console.log($(".info").remove());
+        $(".info-legend").remove();
+    }
+
+    //coloring the map and style
+
+    function getColor(d) {
+
+    return d > grade[5] ? color[5] :
+           d > grade[4] ? color[4] :
+           d > grade[3] ? color[3] :
+           d > grade[2] ? color[2] :
+           d > grade[1] ? color[1] :
+           d > grade[0] ? color[0] :
+                         '#b2b2b2' ;
+    }
+
+    function style(feature) {
+        return {
+            fillColor: getColor(feature.properties.index),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+        };
+    }
+
+//Interaction
+function highlightFeature(e) {
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+    });
+
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+
+    info.update(layer.feature.properties);
+}
+
+function resetHighlight(e) {
+    geojson.resetStyle(e.target);
+    info.update();
+}
+
+function zoomToFeature(e) {
+    map.fitBounds(e.target.getBounds());
+}
+
+function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+    });
+}
+
+geojson = L.geoJson(data, {
+    style:style,
+    onEachFeature: onEachFeature
+}).addTo(map);
+
+//Adding Marker
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info bg-light'); // create a div with a class "info"
+        this.update();
+        return this._div;
+    };
+
+    //method that we will use to update the control based on feature properties passed
+    info.update = function (props) {
+        this._div.innerHTML = '<h4 align="center">Index</h4>';
+
+        if(props){
+            if(props.distname){
+            this._div.innerHTML += '&nbsp;&nbsp;&nbsp;<strong>District:</strong> '+props.distname.toUpperCase()+'<br>';
+            }
+            if(props.talukaname){
+            this._div.innerHTML += '&nbsp;&nbsp;&nbsp;<strong>Taluka:</strong> '+props.talukaname.toUpperCase()+'<br>';
+            }
+            this._div.innerHTML += '&nbsp;&nbsp;&nbsp;<strong>Index:</strong> '+props.index+'';
+        }
+        else{
+        this._div.innerHTML +='<span align="center" class="text-center">Hover over a state</span>';
+        }
+    };
+
+    info.addTo(map);
+    $(".info").prop("style","background-color: white;opacity: 08;border-radius: 8px;width: 200px;");
+
+//Adding Legends
+legend = L.control({position: 'bottomright'});
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info-legend legend'),
+        labels = [];
+
+    div.innerHTML += '<div class="legend_col">'
+    for (var i = 0; i < grade.length; i++) {
+        div.innerHTML +=
+            '<i style="width:20px;height:15px;float:left;background:' + getColor(grade[i]) + '"></i> ' +
+            grade[i] + (grade[i + 1] ? '&ndash;' + grade[i + 1] + '<br>' : '+');
+    }
+    div.innerHTML += '</div>'
+    return div;
+};
+
+legend.addTo(map);
+
+$(".info-legend").prop("style","background-color: white;opacity: 08;border-radius: 8px;width:120px;");
+$(".legend_col").prop("style","margin:10px;");
+}
+</script>
+</body>
+</html>
+{% endblock %}

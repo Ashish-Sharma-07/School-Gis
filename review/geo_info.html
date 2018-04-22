@@ -1,0 +1,17 @@
+{% extends "geonode_base.html" %}
+
+{% block body_outer %}
+  {% if error == 1 %}
+    You uploaded some document in the wrong format. Valid extensions are <b>.jpg, .png, .jpeg</b> Try again
+  {% endif %}
+  <form method="post" enctype="multipart/form-data" action="{% url 'review:geotapped_form' scd%}">
+    {% csrf_token %}
+    <table>
+    	{{ form }}
+    </table>
+    <button type="submit">Upload</button>
+  </form>
+<!--
+  <p><a href="">Return to home</a></p>
+-->
+{% endblock %}

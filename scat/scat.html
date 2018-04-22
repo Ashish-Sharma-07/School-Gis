@@ -1,0 +1,44 @@
+{% extends "geonode_base.html" %}
+{% block body_outer %}
+{% load static  %}
+
+<script>
+$(window).on("load resize ", function() {
+  var scrollWidth = $('.tbl-content').width() - $('.tbl-content table').width();
+  $('.tbl-header').css({'padding-right':scrollWidth});
+}).resize();
+</script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<body>
+<br>
+
+<h4>Categorize Based on..</h4>
+
+<form action="{% url 'scat' %}" method="POST" id="form1">{% csrf_token %}
+    {{ form }}
+    <div id="adiv1"></div>
+<input type="submit" value="submit">
+</form>
+    <button id="b1" class="btn btn-outline-secondary">add conditions</button>
+<button onclick="location.href='{% url 'scat' %}'" class="btn btn-outline-secondary">clear</button>
+  <div class="tbl-header">
+    <table cellpadding="0" cellspacing="0" border="0">
+      <thead>
+      <tr>
+          <th>School Code</th>
+          <th>School Name</th>
+          <th>Established Year</th>
+          <th>Total Students</th>
+          <th>Book in Lib</th>
+          <th>Computer</th>
+          <th>District</th>
+      </tr>
+      </thead>
+    </table>
+      <div class="tbl-content" id="did">
+
+      </div>
+  </div>
+  </section>
+</body>
+{% endblock %}

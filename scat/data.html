@@ -1,0 +1,15 @@
+<table cellpadding="0" cellspacing="0" border="0">
+            <tbody>
+            {% for stds in stds %}
+            <tr>
+            <td>{{ stds.schcd }}</td>
+            <td><a href="{% url 'details' stds.schcd %}">{{ stds.schname }}</a></td>
+            <td>{{ stds.estdyear }}</td>
+            <td>{{ stds.ppstudent }}</td>
+            <td>{{ stds.bookinlib }}</td>
+            <td>{{ stds.computer }}</td>
+            <td>{{ stds.distname }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+</table>

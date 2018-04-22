@@ -1,0 +1,80 @@
+{% extends "geonode_base.html" %}
+<head>
+    {% load static %}
+	{% load avatar_tags %}
+</head>
+{% block body_outer %}
+{% if s_details %}
+		<div class="row">
+				<div class="row">
+					<div class="col-md-4 col-sm-4 col-xs-12 rating-part-left text-center">
+						<h4>{{ s_details.schname }}</h4>
+					</div>
+					<div class="col-md-4 col-sm-4 col-xs-12 rating-part-left text-center">
+						<h4>{{ s_details.distname }}</h4>
+						<button class="button-small" onclick="location.href ='{% url 'review:update' s_details.schcd %}'">
+        					<span>update</span></button>
+				</div>
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<h4>Comments..</h4>
+						{% if cm_app.u_name == None and user.is_authenticated %}
+							<form action="{% url 'review:add_comment' s_details.schcd %}" method="POST">{% csrf_token %}
+								<input type="text" name="comment" placeholder="comment.." />
+								<input type="number" min="1" max="5" name="u_rating" placeholder="Rating..">
+								<input type="submit" value="Add Comment" />
+							</form>
+						{% endif %}
+					</div>
+
+					{% for i in c_details %}
+
+					<div class="row review-section">
+					<div class="col-md-12 col-sm-12 col-xs-12">
+						<hr>
+						<hr>
+					</div>
+
+					<div class="col-md-4 col-md-4 col-xs-4 review-part-left">
+						<div class="row">
+							<div class="col-md-4 col-sm-4 col-xs-12">
+								{% avatar user 42 %}
+							</div>
+							<div class="col-md-8 col-sm-8 col-xs-12">
+								<!--<p> DATE</p>-->
+								<span>{{ i.u_name }}</span><br>
+								<!--<small>Report</small>-->
+								<div class="col-md-12 col-sm-12 col-xs-12">
+								{% with ''|center:i.u_rating as range %}
+								{% for _ in range %}
+								<i class="fa fa-star" aria-hidden="true"></i></i>
+									{% endfor %}
+								{% endwith %}
+							</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-8 col-sm-8 col-xs-8 review-part-right">
+						<div class="row">
+							<div class="col-md-12 col-sm-12 col-xs-12">
+								{% if i.comment %}
+								<h4>{{ i.comment }}</h4>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+				</div>
+
+                {% endfor %}
+				</div>
+			<div class="row">
+				{% if cm_app.u_name == None and user.is_authenticated %}
+				<button class="btn btn-primary" onclick="location.href ='{% url 'review:fees_form' s_details.schcd %}'">Fees Structure</button>
+				<button class="btn btn-primary" onclick="location.href ='{% url 'review:security_form' s_details.schcd %}'" >Security</button>
+				<button class="btn btn-primary" onclick="location.href ='{% url 'review:geotapped_form' s_details.schcd %}'">Geotagging</button>
+				{% else %}
+				<div class="lead"> User Should Be Logged in to comment and add data!! </div>
+				{% endif %}
+			</div>
+	</div>
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "geonode_base.html" %}
+  <head>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+ </head>
+{% block body_outer %}
+ <body>
+     {% if error == 1 %}
+    	Your form could not be submitted. The issues are follows<br>
+    	{{comments}}
+    {% endif %}
+	<div class="container">
+  		<form method="post" enctype="multipart/form-data" action="{% url 'review:update' scd %}">
+  			{% csrf_token %}
+  			<table>
+  				<tr>
+  					<th>School Code</th>  <td> : {{scd}}</td>
+  				</tr>
+  				{% for row in rows %}
+  		
+  					<tr>
+  						{% for field in row %}
+  							<th>{{field.label_tag}}</th>  <td>{{field}}</td>
+  						{% endfor %}
+  					</tr>
+  			
+  				{% endfor %}
+  			</table>
+  		
+    		<input class="btn btn-primary" type="submit" value="Update" /> 
+  		</form>
+    </div>
+{% endblock %}
+</body>
+</html>
+
