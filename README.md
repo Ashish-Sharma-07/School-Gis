@@ -1,5 +1,5 @@
 # School-Gis
----
+
 ## Abstract
 The term GIS is a system designed to capture, stores, manipulate, analyze,
 manage and presents all types of spatial data related to earth using proprietary
